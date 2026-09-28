@@ -17,7 +17,12 @@ class DeviceAdminManager(private val ctx: Context) {
         var flags = 0
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
             flags = flags.or(DevicePolicyManager.WIPE_SILENTLY)
-        dpm?.wipeData(flags)
+        // Since Android 14 wipeData() throws IllegalStateException for apps
+        // targeting API 34+ when called from the primary user, use wipeDevice().
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+            dpm?.wipeDevice(flags)
+        else
+            dpm?.wipeData(flags)
     }
 
     fun makeRequestIntent() =

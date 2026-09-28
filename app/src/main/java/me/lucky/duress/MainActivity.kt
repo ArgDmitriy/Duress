@@ -1,16 +1,23 @@
 package me.lucky.duress
 
+import android.Manifest
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
 import android.view.accessibility.AccessibilityManager
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -26,14 +33,28 @@ class MainActivity : AppCompatActivity() {
     private val admin by lazy { DeviceAdminManager(this) }
     private var accessibilityManager: AccessibilityManager? = null
 
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+
     private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         prefs.copyTo(prefsdb, key)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Edge-to-edge is enforced for apps targeting Android 15+.
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or
+                    WindowInsetsCompat.Type.displayCutout() or
+                    WindowInsetsCompat.Type.ime(),
+            )
+            v.updatePadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
         init1()
         if (initBiometric()) return
         init2()
@@ -171,6 +192,7 @@ class MainActivity : AppCompatActivity() {
             Mode.WIPE.value -> View.GONE
             Mode.TEST.value -> {
                 NotificationManager(this).createNotificationChannels()
+                requestNotificationPermission()
                 View.GONE
             }
             else -> View.GONE
@@ -220,6 +242,12 @@ class MainActivity : AppCompatActivity() {
             return
         }
         if (prefs.mode == Mode.WIPE.value && !hasAdminPermission()) requestAdminPermission()
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            NotificationManager(this).hasPermission()) return
+        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 
     private fun requestAccessibilityPermission() =
