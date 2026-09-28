@@ -1,0 +1,5 @@
+* target Android 16 (API 36), One UI 8.5 support
+* use wipeDevice on Android 14+
+* language independent keyguard B detection
+* request notification permission for test mode
+* edge-to-edge layout

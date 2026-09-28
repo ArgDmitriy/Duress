@@ -31,6 +31,21 @@ Be aware that the app does not work in _safe mode_.
 * Google Pixel 4a/5a, Android 12
 * Samsung Tab S8, Android 12
 
+## Android 16 / One UI 8.5
+
+* Sideloaded APK: open App info → ⋮ → _Allow restricted settings_ before
+  enabling the accessibility service. With Samsung _Auto Blocker_ (maximum
+  restrictions) or Android _Advanced Protection_ enabled, non-accessibility-tool
+  services are blocked and the app will not work.
+* Keyguard B: press OK after entering the duress PIN. Disable _Confirm PIN
+  without tapping OK_ if the duress PIN starts with your real PIN, otherwise the
+  device unlocks before the duress PIN is complete.
+* Keyguard B detects PIN pad buttons by view id, so it no longer depends on the
+  system language. Wrong PIN announcements are deprecated in Android 16 and may
+  be absent, the OK button is used instead.
+* Excluding the app from battery optimization (Settings → Apps → Duress →
+  Battery → Unrestricted) is recommended.
+
 ## Permissions
 
 * ACCESSIBILITY - listen for a duress password on the lockscreen

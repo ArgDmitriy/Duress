@@ -1,6 +1,11 @@
 package me.lucky.duress
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -22,7 +27,14 @@ class NotificationManager(private val ctx: Context) {
         ).setName(ctx.getString(R.string.notification_channel_default_name)).build())
     }
 
+    fun hasPermission() =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+
+    @SuppressLint("MissingPermission")
     fun send() {
+        if (!hasPermission()) return
         manager.notify(
             NOTIFICATION_ID,
             NotificationCompat.Builder(ctx, CHANNEL_DEFAULT_ID)
