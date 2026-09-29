@@ -305,8 +305,9 @@ class MainActivity : AppCompatActivity() {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             // Opens the service page directly, falls back to the list.
+            // The action is a hidden API, so it is referenced by its value.
             try {
-                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_DETAILS_SETTINGS)
+                startActivity(Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS")
                     .putExtra(Intent.EXTRA_COMPONENT_NAME, component))
                 return
             } catch (exc: ActivityNotFoundException) {
