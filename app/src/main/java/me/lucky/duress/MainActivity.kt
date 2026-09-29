@@ -4,6 +4,7 @@ import android.Manifest
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -21,7 +22,7 @@ import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.tabs.TabLayout
+import com.google.android.material.color.MaterialColors
 
 import me.lucky.duress.admin.DeviceAdminManager
 import me.lucky.duress.databinding.ActivityMainBinding
@@ -83,7 +84,7 @@ class MainActivity : AppCompatActivity() {
     private fun init2() {
         selectInterface()
         binding.apply {
-            tabs.selectTab(tabs.getTabAt(prefs.mode))
+            mode.check(modeToId(prefs.mode))
             action.editText?.setText(prefs.action)
             receiver.editText?.setText(prefs.receiver)
             extraKey.editText?.setText(prefs.extraKey)
@@ -96,6 +97,40 @@ class MainActivity : AppCompatActivity() {
             })
             toggle.isChecked = prefs.isEnabled
         }
+        renderStatus()
+    }
+
+    private fun modeToId(value: Int) = when (value) {
+        Mode.WIPE.value -> R.id.modeWipe
+        Mode.TEST.value -> R.id.modeTest
+        else -> R.id.modeBroadcast
+    }
+
+    private fun idToMode(id: Int) = when (id) {
+        R.id.modeWipe -> Mode.WIPE.value
+        R.id.modeTest -> Mode.TEST.value
+        else -> Mode.BROADCAST.value
+    }
+
+    private fun renderStatus() = binding.apply {
+        val on = toggle.isChecked
+        val bg = MaterialColors.getColor(
+            statusCard,
+            if (on) com.google.android.material.R.attr.colorPrimaryContainer
+            else com.google.android.material.R.attr.colorSurfaceContainerHighest,
+        )
+        val fg = MaterialColors.getColor(
+            statusCard,
+            if (on) com.google.android.material.R.attr.colorOnPrimaryContainer
+            else com.google.android.material.R.attr.colorOnSurfaceVariant,
+        )
+        statusCard.setCardBackgroundColor(bg)
+        statusIcon.imageTintList = ColorStateList.valueOf(fg)
+        statusTitle.setTextColor(fg)
+        statusSubtitle.setTextColor(fg)
+        statusTitle.setText(if (on) R.string.status_on else R.string.status_off)
+        statusSubtitle.setText(
+            if (on) R.string.status_on_description else R.string.status_off_description)
     }
 
     private fun initBiometric(): Boolean {
@@ -137,23 +172,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setup() = binding.apply {
-        tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab?) {
-                if (tab == null) return
-                setOff()
-                for (m in Mode.values()) {
-                    if (m.value == tab.position) {
-                        prefs.mode = m.value
-                        break
-                    }
-                }
-                selectInterface()
-            }
-
-            override fun onTabUnselected(tab: TabLayout.Tab?) {}
-            override fun onTabReselected(tab: TabLayout.Tab?) {}
-
-        })
+        mode.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked) return@addOnButtonCheckedListener
+            val value = idToMode(checkedId)
+            if (value == prefs.mode) return@addOnButtonCheckedListener
+            setOff()
+            prefs.mode = value
+            selectInterface()
+        }
         action.editText?.doAfterTextChanged {
             prefs.action = it?.toString()?.trim() ?: ""
         }
@@ -169,11 +195,12 @@ class MainActivity : AppCompatActivity() {
         passwordOrLen.editText?.doAfterTextChanged {
             prefs.passwordOrLen = it?.toString()?.trim() ?: ""
         }
-        keyguardType.setOnCheckedChangeListener { _, checkedId ->
+        keyguardType.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked) return@addOnButtonCheckedListener
             prefs.keyguardType = when (checkedId) {
                 R.id.keyguardTypeA -> KeyguardType.A.value
                 R.id.keyguardTypeB -> KeyguardType.B.value
-                else -> return@setOnCheckedChangeListener
+                else -> return@addOnButtonCheckedListener
             }
         }
         toggle.setOnCheckedChangeListener { _, isChecked ->
@@ -183,29 +210,24 @@ class MainActivity : AppCompatActivity() {
                 return@setOnCheckedChangeListener
             }
             prefs.isEnabled = isChecked
+            renderStatus()
         }
+        statusCard.setOnClickListener { toggle.toggle() }
     }
 
     private fun selectInterface() {
-        val v = when (prefs.mode) {
-            Mode.BROADCAST.value -> View.VISIBLE
-            Mode.WIPE.value -> View.GONE
-            Mode.TEST.value -> {
-                NotificationManager(this).createNotificationChannels()
-                requestNotificationPermission()
-                View.GONE
-            }
-            else -> View.GONE
+        if (prefs.mode == Mode.TEST.value) {
+            NotificationManager(this).createNotificationChannels()
+            requestNotificationPermission()
         }
         binding.apply {
-            action.visibility = v
-            receiver.visibility = v
-            extraKey.visibility = v
-            extraValue.visibility = v
-            space1.visibility = v
-            space2.visibility = v
-            space3.visibility = v
-            space4.visibility = v
+            broadcastCard.visibility =
+                if (prefs.mode == Mode.BROADCAST.value) View.VISIBLE else View.GONE
+            modeDescription.setText(when (prefs.mode) {
+                Mode.WIPE.value -> R.string.mode_wipe_description
+                Mode.TEST.value -> R.string.mode_test_description
+                else -> R.string.mode_broadcast_description
+            })
         }
     }
 

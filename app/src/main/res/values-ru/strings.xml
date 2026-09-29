@@ -1,11 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Duress</string>
-    <string name="service_unavailable_popup">Служба доступности недоступна</string>
-    <string name="prominent_disclosure_title">Раскрытие Информации</string>
-    <string name="prominent_disclosure_message">Приложение использует службу доступности, чтобы ожидать пароль под принуждением на экране блокировки. Когда найдет, оно отправит широковещательное сообщение выбранному получателю.</string>
+    <string name="service_unavailable_popup">Служба специальных возможностей не включена</string>
+    <string name="prominent_disclosure_title">Важная информация</string>
+    <string name="prominent_disclosure_message">Приложение использует службу специальных возможностей, чтобы отслеживать ввод пароля под принуждением на экране блокировки. Когда он будет введён, приложение отправит сигнал другому приложению или сотрёт все данные на устройстве.</string>
     <string name="accept">Принять</string>
     <string name="exit">Выйти</string>
-    <string name="action">Действие *</string>
-    <string name="receiver">Получатель</string>
+    <string name="action">Действие (action) *</string>
+    <string name="receiver">Получатель (пакет/класс)</string>
+    <string name="extra_key">Ключ</string>
+    <string name="extra_value">Значение</string>
+    <string name="password_or_len">PIN-код под принуждением или длина *</string>
+    <string name="password_or_len_helper_text">Введите отдельный PIN-код, который будете вводить под принуждением. Либо число — длину: сработает любой ввод такой длины или длиннее. Длина должна быть минимум на 2 больше длины вашего настоящего PIN-кода.</string>
+    <string name="tab_broadcast">СИГНАЛ</string>
+    <string name="tab_wipe">СБРОС</string>
+    <string name="tab_test">ТЕСТ</string>
+    <string name="keyguard_type">Тип экрана блокировки</string>
+    <string name="keyguard_type_a">A</string>
+    <string name="keyguard_type_b">B (только PIN)</string>
+    <string name="keyguard_type_description">B — рекомендуется для Samsung и PIN-кода: нажимайте OK после ввода. A — читает поле ввода и для PIN-кода требует включённого показа символов при вводе. После смены типа перезапустите службу специальных возможностей.</string>
+    <string name="authentication">Подтвердите личность</string>
+    <string name="notification_channel_default_name">Основные</string>
+    <string name="notification_title">Тест пройден</string>
+    <string name="status_on">Защита включена</string>
+    <string name="status_off">Защита выключена</string>
+    <string name="status_on_description">Отслеживается ввод PIN-кода под принуждением на экране блокировки</string>
+    <string name="status_off_description">Нажмите, чтобы начать отслеживание на экране блокировки</string>
+    <string name="section_mode">Что сделать</string>
+    <string name="mode_broadcast">Сигнал</string>
+    <string name="mode_wipe">Сброс</string>
+    <string name="mode_test">Тест</string>
+    <string name="mode_broadcast_description">Отправить сигнал другому приложению, например Wasted, — оно заблокирует или очистит устройство.</string>
+    <string name="mode_wipe_description">Сразу сбросить устройство до заводских настроек без подтверждения. Все данные будут удалены. Нужны права администратора устройства.</string>
+    <string name="mode_test_description">Только показать уведомление. Проверьте так, что PIN-код распознаётся, прежде чем включать сброс.</string>
+    <string name="section_trigger">PIN-код под принуждением</string>
+    <string name="section_broadcast">Параметры сигнала</string>
+    <string name="section_broadcast_description">Какой intent отправить. Значения возьмите в приложении-получателе.</string>
+    <string name="help_title">Не включается служба?</string>
+    <string name="help_text">Если приложение установлено из файла: Настройки → Приложения → Duress → ⋮ → «Разрешить ограниченные настройки», затем включите Duress в Специальных возможностях → Установленные приложения. Samsung Auto Blocker в режиме максимальных ограничений блокирует службу.</string>
 </resources>
