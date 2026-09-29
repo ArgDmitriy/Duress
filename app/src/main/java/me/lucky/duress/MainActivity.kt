@@ -2,9 +2,12 @@ package me.lucky.duress
 
 import android.Manifest
 import android.accessibilityservice.AccessibilityServiceInfo
+import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.ColorStateList
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -272,8 +275,55 @@ class MainActivity : AppCompatActivity() {
         notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 
-    private fun requestAccessibilityPermission() =
-        startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+    // Android 13+ blocks accessibility for sideloaded apps ("Restricted setting"),
+    // so explain how to lift the restriction before sending the user to settings.
+    private fun requestAccessibilityPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            openAccessibilitySettings()
+            return
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.accessibility_dialog_title)
+            .setMessage(R.string.accessibility_dialog_message)
+            .setPositiveButton(R.string.accessibility_dialog_open) { _, _ ->
+                openAccessibilitySettings()
+            }
+            .setNeutralButton(R.string.accessibility_dialog_app_info) { _, _ ->
+                openAppInfo()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun openAccessibilitySettings() {
+        val component = ComponentName(this, AccessibilityService::class.java).flattenToString()
+        val list = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+            // Highlights the service in the list on most OEM settings apps.
+            val args = Bundle().apply { putString(":settings:fragment_args_key", component) }
+            putExtra(":settings:fragment_args_key", component)
+            putExtra(":settings:show_fragment_args", args)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Opens the service page directly, falls back to the list.
+            // The action is a hidden API, so it is referenced by its value.
+            try {
+                startActivity(Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS")
+                    .putExtra(Intent.EXTRA_COMPONENT_NAME, component))
+                return
+            } catch (exc: ActivityNotFoundException) {
+            } catch (exc: SecurityException) {}
+        }
+        try { startActivity(list) } catch (exc: ActivityNotFoundException) {}
+    }
+
+    private fun openAppInfo() {
+        try {
+            startActivity(Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.fromParts("package", packageName, null),
+            ))
+        } catch (exc: ActivityNotFoundException) {}
+    }
 
     private fun requestAdminPermission() = startActivity(admin.makeRequestIntent())
 
@@ -285,12 +335,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun hasAccessibilityPermission(): Boolean {
-        for (info in accessibilityManager?.getEnabledAccessibilityServiceList(
-            AccessibilityServiceInfo.FEEDBACK_GENERIC,
-        ) ?: return true) {
-            if (info.resolveInfo.serviceInfo.packageName == packageName) return true
+        accessibilityManager?.getEnabledAccessibilityServiceList(
+            AccessibilityServiceInfo.FEEDBACK_ALL_MASK,
+        )?.let { list ->
+            if (list.any { it.resolveInfo.serviceInfo.packageName == packageName }) return true
         }
-        return false
+        // The manager only lists bound services, also check the setting itself.
+        val enabled = Settings.Secure.getString(
+            contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+        ) ?: return false
+        val component = ComponentName(this, AccessibilityService::class.java)
+        return enabled.split(':').any {
+            ComponentName.unflattenFromString(it) == component
+        }
     }
 
     private fun hasAdminPermission() = admin.isActive()

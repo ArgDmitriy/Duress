@@ -38,4 +38,8 @@
     <string name="section_broadcast_description">Which intent to send. Take the values from the receiving app.</string>
     <string name="help_title">Can\'t enable the service?</string>
     <string name="help_text">If the app was installed from a file, open App info → ⋮ → Allow restricted settings, then enable Duress in Accessibility → Installed apps. Samsung Auto Blocker in maximum restrictions mode blocks the service.</string>
+    <string name="accessibility_dialog_title">Allow accessibility</string>
+    <string name="accessibility_dialog_message">Turn on the Duress service in Accessibility.\n\nIf the switch is greyed out and says \"Restricted setting\" (the app was installed from an APK):\n1. Tap the switch once and close the message.\n2. Open App info, tap ⋮ in the top right corner and choose \"Allow restricted settings\".\n3. Come back to Accessibility and turn Duress on.\n\nOn Samsung, if the ⋮ item is missing, check Settings → Security and privacy → Auto Blocker.</string>
+    <string name="accessibility_dialog_open">Accessibility</string>
+    <string name="accessibility_dialog_app_info">App info</string>
 </resources>
